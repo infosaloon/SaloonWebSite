@@ -27,20 +27,42 @@ const Contact = () => {
       const nextSlNo = contactSubmissions.length + 1;
       const formattedSlNo = 'SL-' + String(nextSlNo).padStart(3, '0');
 
+      // Format current date as DD/MM/YYYY
+      const currentDate = new Date();
+      const formattedDate = currentDate.getDate().toString().padStart(2, '0') + '/' + 
+                           (currentDate.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                           currentDate.getFullYear();
+
       const endpoint = 'https://script.google.com/macros/s/AKfycbxpMxkSTxgvynzVmTsKGdSB8N4soIudI81_53UwZU83iO5PkWpbN12VIlcLO-KtmnQ/exec';
       const data = new FormData();
       data.append('action', 'insert');
       data.append('sheetName', 'Sheet1');
+      
+      // Row data format:
+      // Column A: Timestamp (DD/MM/YYYY)
+      // Column B: Sl No (SL-001, SL-002, etc.)
+      // Column C: Name
+      // Column D: Email
+      // Column E: Phone
+      // Column F: Message
       data.append('rowData', JSON.stringify([
-        new Date().toISOString(),
+        formattedDate,          // Column A - Timestamp in DD/MM/YYYY format
+        formattedSlNo,          // Column B - Sl No in SL-001 format
+        formData.name.trim(),   // Column C - Name
+        formData.email.trim(),  // Column D - Email
+        formData.phone.trim(),  // Column E - Phone
+        formData.message.trim() // Column F - Message
+      ]));
+
+      console.log('Sending POST request to:', endpoint);
+      console.log('Row data being sent:', [
+        formattedDate,
         formattedSlNo,
         formData.name.trim(),
         formData.email.trim(),
         formData.phone.trim(),
         formData.message.trim()
-      ]));
-
-      console.log('Sending POST request to:', endpoint);
+      ]);
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -53,10 +75,10 @@ const Contact = () => {
         throw new Error('Submission failed');
       }
 
-      // Store submission in session storage
+      // Store submission in session storage with proper formatting
       contactSubmissions.push({
         id: formattedSlNo,
-        timestamp: new Date().toISOString(),
+        timestamp: formattedDate,
         ...formData
       });
       sessionStorage.setItem('contactSubmissions', JSON.stringify(contactSubmissions));
@@ -104,7 +126,7 @@ const Contact = () => {
                 <p className="text-sm text-gray-600">Fill out the form below and we'll get back to you within 24 hours.</p>
               </div>
               
-              <div className="space-y-4" onSubmit={handleSubmit}>
+              <div className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="group">
                     <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
